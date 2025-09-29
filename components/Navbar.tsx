@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import { Linkedin, Github, Instagram } from 'lucide-react';
 import Button from './Button';
 
 interface NavbarProps {
@@ -22,11 +23,44 @@ const Navbar: React.FC<NavbarProps> = ({ className = '' }) => {
           <Link href="/contact" className="text-white/80 hover:text-white transition-colors">Contact</Link>
         </div>
         
-        <Link href="/contact">
-          <Button variant="outline" size="sm" className="border-white/30 text-white hover:bg-white/10">
-            Get In Touch
-          </Button>
-        </Link>
+        <div className="flex items-center space-x-4">
+          {/* Social Media Icons */}
+          <div className="hidden md:flex items-center space-x-3">
+            <Link
+              href="https://linkedin.com/in/adarshborker04"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white/60 hover:text-blue-400 transition-colors p-1"
+              aria-label="LinkedIn"
+            >
+              <Linkedin className="w-5 h-5" />
+            </Link>
+            <Link
+              href="https://github.com/borkeradarsh"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white/60 hover:text-blue-400 transition-colors p-1"
+              aria-label="GitHub"
+            >
+              <Github className="w-5 h-5" />
+            </Link>
+            <Link
+              href="https://instagram.com/adarsh.borker"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white/60 hover:text-pink-400 transition-colors p-1"
+              aria-label="Instagram"
+            >
+              <Instagram className="w-5 h-5" />
+            </Link>
+          </div>
+          
+          <Link href="/contact">
+            <Button variant="outline" size="sm" className="border-white/30 text-white hover:bg-white/10">
+              Get In Touch
+            </Button>
+          </Link>
+        </div>
       </div>
     </nav>
   );

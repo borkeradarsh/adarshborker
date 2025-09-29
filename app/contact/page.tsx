@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Mail, Linkedin, Github } from 'lucide-react';
 import AnimatedBackground from '@/components/AnimatedBackground';
 import Button from '@/components/Button';
 
@@ -30,12 +31,29 @@ export default function Contact() {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    alert('Message sent successfully! I\'ll get back to you soon.');
-    setFormData({ name: '', email: '', message: '' });
-    setIsSubmitting(false);
+    try {
+      // Formspree endpoint for receiving form submissions
+      const FORMSPREE_ENDPOINT = 'https://formspree.io/f/xpwypgdj';
+      
+      const response = await fetch(FORMSPREE_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+      
+      if (response.ok) {
+        alert('Message sent successfully! I\'ll get back to you soon.');
+        setFormData({ name: '', email: '', message: '' });
+      } else {
+        alert('Failed to send message. Please try again.');
+      }
+    } catch (error) {
+      alert('Error sending message. Please try again or contact me directly.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -50,7 +68,7 @@ export default function Contact() {
       <div className="min-h-screen pt-20 px-4 relative z-10">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-16">
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-6 mt-4">
               Get In Touch
             </h1>
             <p className="text-xl text-slate-300 max-w-3xl mx-auto">
@@ -63,38 +81,57 @@ export default function Contact() {
             <div>
               <h2 className="text-2xl font-bold text-white mb-6">Let's Connect</h2>
               <div className="space-y-6">
-                <div className="flex items-center">
-                  <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center mr-4">
-                    <span className="text-blue-400 text-xl">📧</span>
+                <motion.a
+                  href="mailto:borkeradi07@gmail.com"
+                  className="flex items-center group cursor-pointer"
+                  whileHover={{ x: 10 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center mr-4 group-hover:bg-blue-500/30 transition-colors">
+                    <Mail className="text-blue-400 w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="text-white font-medium">Email</h3>
-                    <p className="text-slate-300">your.email@example.com</p>
+                    <h3 className="text-white font-medium group-hover:text-blue-400 transition-colors">Email</h3>
+                    <p className="text-slate-300">borkeradi07@gmail.com</p>
                   </div>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center mr-4">
-                    <span className="text-blue-400 text-xl">💼</span>
-                  </div>
-                  <div>
-                    <h3 className="text-white font-medium">LinkedIn</h3>
-                    <p className="text-slate-300">linkedin.com/in/your-profile</p>
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center mr-4">
-                    <span className="text-blue-400 text-xl">🚀</span>
+                </motion.a>
+                <motion.a
+                  href="https://linkedin.com/in/adarshborker04"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center group cursor-pointer"
+                  whileHover={{ x: 10 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center mr-4 group-hover:bg-blue-500/30 transition-colors">
+                    <Linkedin className="text-blue-400 w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="text-white font-medium">GitHub</h3>
-                    <p className="text-slate-300">github.com/your-username</p>
+                    <h3 className="text-white font-medium group-hover:text-blue-400 transition-colors">LinkedIn</h3>
+                    <p className="text-slate-300">linkedin.com/in/adarshborker04</p>
                   </div>
-                </div>
+                </motion.a>
+                <motion.a
+                  href="https://github.com/borkeradarsh"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center group cursor-pointer"
+                  whileHover={{ x: 10 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center mr-4 group-hover:bg-blue-500/30 transition-colors">
+                    <Github className="text-blue-400 w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-white font-medium group-hover:text-blue-400 transition-colors">GitHub</h3>
+                    <p className="text-slate-300">github.com/borkeradarsh</p>
+                  </div>
+                </motion.a>
               </div>
             </div>
 
             {/* Contact Form */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 mb-4 border border-white/20">
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
                   <label htmlFor="name" className="block text-white font-medium mb-2">
