@@ -171,3 +171,39 @@ main {
   .blur-3xl { filter: blur(20px) !important; }
   .blur-2xl { filter: blur(15px) !important; }
 }
+
+/* Performance optimized animations */
+@keyframes fadeGrid {
+  0%, 100% { opacity: 0.1; }
+  50% { opacity: 0.3; }
+}
+
+/* GPU acceleration and performance optimizations */
+.animated-bg-element {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Reduce motion for better mobile performance */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Mobile specific optimizations */
+@media (max-width: 768px) {
+  * {
+    transform: translateZ(0);
+  }
+  
+  /* Reduce complex effects on mobile */
+  .motion-reduce-mobile {
+    animation: none !important;
+    transition: none !important;
+  }
+}
