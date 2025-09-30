@@ -81,8 +81,11 @@ export default function Contact() {
             <div>
               <h2 className="text-2xl font-bold text-white mb-6">Let's Connect</h2>
               <div className="space-y-6">
-                <motion.a
-                  href="mailto:borkeradi07@gmail.com"
+                <motion.div
+                  onClick={() => {
+                    // Simple approach that should work
+                    window.location.href = 'mailto:borkeradi07@gmail.com';
+                  }}
                   className="flex items-center group cursor-pointer"
                   whileHover={{ x: 10 }}
                   transition={{ type: "spring", stiffness: 300 }}
@@ -94,7 +97,7 @@ export default function Contact() {
                     <h3 className="text-white font-medium group-hover:text-blue-400 transition-colors">Email</h3>
                     <p className="text-slate-300">borkeradi07@gmail.com</p>
                   </div>
-                </motion.a>
+                </motion.div>
                 <motion.a
                   href="https://linkedin.com/in/adarshborker04"
                   target="_blank"

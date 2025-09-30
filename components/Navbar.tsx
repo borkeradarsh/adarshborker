@@ -86,7 +86,7 @@ const Navbar: React.FC<NavbarProps> = ({ className = '' }) => {
               <Github className="w-5 h-5" />
             </Link>
             <Link
-              href="https://instagram.com/adarsh_borker"
+              href="https://instagram.com/adarsh.borker"
               target="_blank"
               rel="noopener noreferrer"
               className="text-white/60 hover:text-pink-400 transition-colors p-1"
