@@ -106,18 +106,8 @@ const AnimatedBackground = () => {
       <div className="absolute inset-0 overflow-hidden">
         
         {isMobile ? (
-          // Mobile: Responsive CSS Grid (no animations for performance)
-          <div 
-            className="absolute inset-0 opacity-40"
-            style={{
-              backgroundImage: `
-                linear-gradient(rgba(180, 200, 255, 0.6) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(180, 200, 255, 0.5) 1px, transparent 1px)
-              `,
-              backgroundSize: `calc(100vw / 10) calc(100vh / 8)`,
-              filter: 'blur(0.5px)'
-            }}
-          />
+          // Mobile: No gridlines for clean mobile experience
+          null
         ) : (
           // Desktop: Animated grid with original complexity
           <motion.div 
