@@ -1,17 +1,29 @@
 ﻿'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 
 const AnimatedBackground = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [isMobile, setIsMobile] = useState(false);
+  const shouldReduceMotion = useReducedMotion();
 
   useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024); // Include md and smaller devices
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 60000); // Update every minute
 
-    return () => clearInterval(timer);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener('resize', checkMobile);
+    };
   }, []);
 
   // Calculate sun position based on time
@@ -44,8 +56,9 @@ const AnimatedBackground = () => {
   };
 
   const sunPosition = getSunPosition();
+  
   return (
-    <div className="fixed inset-0 overflow-hidden -z-10">
+    <div className="fixed inset-0 overflow-hidden -z-10" style={{ willChange: 'transform', transform: 'translateZ(0)' }}>
       {/* Realistic deep space background - true cosmic black */}
       <div 
         className="absolute inset-0"
@@ -82,77 +95,92 @@ const AnimatedBackground = () => {
         }}
       />
       
-      {/* Elegant Space Grid - Simple Wave Animation */}
+      {/* Responsive Space Grid - CSS Grid for true responsiveness */}
       <div className="absolute inset-0 overflow-hidden">
         
-        {/* Primary Grid Lines with Wave-like Opacity */}
-        <motion.div 
-          className="absolute inset-0"
-          animate={{
-            opacity: [0.15, 0.25, 0.15]
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        >
-          {/* Vertical Lines */}
-          {Array.from({ length: 30 }).map((_, i) => (
-            <motion.div
-              key={`v-${i}`}
-              className="absolute w-px h-full"
-              style={{
-                left: `${(i + 1) * 3.33}%`,
-                background: `linear-gradient(180deg, 
-                  transparent 0%, 
-                  rgba(180, 200, 255, 0.3) 20%, 
-                  rgba(200, 220, 255, 0.6) 50%, 
-                  rgba(180, 200, 255, 0.3) 80%, 
-                  transparent 100%
-                )`,
-                filter: 'blur(0.5px)'
-              }}
-              animate={{
-                opacity: [0.2, 0.8, 0.2]
-              }}
-              transition={{
-                duration: 4,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: i * 0.1
-              }}
-            />
-          ))}
-          
-          {/* Horizontal Lines */}
-          {Array.from({ length: 15 }).map((_, i) => (
-            <motion.div
-              key={`h-${i}`}
-              className="absolute h-px w-full"
-              style={{
-                top: `${(i + 1) * 6.67}%`,
-                background: `linear-gradient(90deg, 
-                  transparent 0%, 
-                  rgba(180, 200, 255, 0.2) 20%, 
-                  rgba(200, 220, 255, 0.5) 50%, 
-                  rgba(180, 200, 255, 0.2) 80%, 
-                  transparent 100%
-                )`,
-                filter: 'blur(0.5px)'
-              }}
-              animate={{
-                opacity: [0.15, 0.7, 0.15]
-              }}
-              transition={{
-                duration: 5,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: i * 0.15
-              }}
-            />
-          ))}
-        </motion.div>
+        {isMobile ? (
+          // Mobile: Responsive CSS Grid (no animations for performance)
+          <div 
+            className="absolute inset-0 opacity-40"
+            style={{
+              backgroundImage: `
+                linear-gradient(rgba(180, 200, 255, 0.6) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(180, 200, 255, 0.5) 1px, transparent 1px)
+              `,
+              backgroundSize: `calc(100vw / 10) calc(100vh / 8)`,
+              filter: 'blur(0.5px)'
+            }}
+          />
+        ) : (
+          // Desktop: Animated grid with original complexity
+          <motion.div 
+            className="absolute inset-0"
+            animate={{
+              opacity: [0.15, 0.25, 0.15]
+            }}
+            transition={{
+              duration: 8,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          >
+            {/* Vertical Lines */}
+            {Array.from({ length: 30 }).map((_, i) => (
+              <motion.div
+                key={`v-${i}`}
+                className="absolute w-px h-full"
+                style={{
+                  left: `${(i + 1) * 3.33}%`,
+                  background: `linear-gradient(180deg, 
+                    transparent 0%, 
+                    rgba(180, 200, 255, 0.3) 20%, 
+                    rgba(200, 220, 255, 0.6) 50%, 
+                    rgba(180, 200, 255, 0.3) 80%, 
+                    transparent 100%
+                  )`,
+                  filter: 'blur(0.5px)'
+                }}
+                animate={shouldReduceMotion ? {} : {
+                  opacity: [0.1, 0.2, 0.1]
+                }}
+                transition={shouldReduceMotion ? {} : {
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: i * 0.1
+                }}
+              />
+            ))}
+            
+            {/* Horizontal Lines */}
+            {Array.from({ length: 15 }).map((_, i) => (
+              <motion.div
+                key={`h-${i}`}
+                className="absolute h-px w-full"
+                style={{
+                  top: `${(i + 1) * 6.67}%`,
+                  background: `linear-gradient(90deg, 
+                    transparent 0%, 
+                    rgba(180, 200, 255, 0.2) 20%, 
+                    rgba(200, 220, 255, 0.5) 50%, 
+                    rgba(180, 200, 255, 0.2) 80%, 
+                    transparent 100%
+                  )`,
+                  filter: 'blur(0.5px)'
+                }}
+                animate={shouldReduceMotion ? {} : {
+                  opacity: [0.15, 0.7, 0.15]
+                }}
+                transition={shouldReduceMotion ? {} : {
+                  duration: 5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: i * 0.15
+                }}
+              />
+            ))}
+          </motion.div>
+        )}
 
 
 

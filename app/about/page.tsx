@@ -47,9 +47,24 @@ export default function About() {
         exit="exit"
       >
         <div className="max-w-6xl mx-auto">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-16 text-center">
-            About Me
-          </h1>
+          <div className="text-center mb-16">
+            <motion.h1 
+              className="text-5xl md:text-6xl font-bold text-white mb-6"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              About Me
+            </motion.h1>
+            <motion.p 
+              className="text-xl text-slate-300 max-w-3xl mx-auto"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              Exploring, learning and embracing the journey
+            </motion.p>
+          </div>
 
           {/* Introduction Section */}
           <div className="grid md:grid-cols-2 gap-12 items-center mb-16">
