@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 
 const AnimatedBackground = () => {
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [currentTime, setCurrentTime] = useState<Date | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const shouldReduceMotion = useReducedMotion();
 
@@ -15,6 +15,9 @@ const AnimatedBackground = () => {
     
     checkMobile();
     window.addEventListener('resize', checkMobile);
+
+    // Initialize time on client side only to avoid SSR/hydration mismatch
+    setCurrentTime(new Date());
 
     const timer = setInterval(() => {
       setCurrentTime(new Date());
@@ -28,6 +31,10 @@ const AnimatedBackground = () => {
 
   // Calculate sun position based on time
   const getSunPosition = () => {
+    if (!currentTime) {
+      return { x: 50, y: 15, isVisible: true, angle: 90 };
+    }
+    
     const hours = currentTime.getHours();
     const minutes = currentTime.getMinutes();
     const totalMinutes = hours * 60 + minutes;
