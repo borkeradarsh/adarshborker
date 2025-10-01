@@ -1,8 +1,16 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
-import AnimatedBackground from '@/components/AnimatedBackground';
+import dynamic from 'next/dynamic';
+import { scheduleWork } from '../../utils/performance';
+
+// Dynamic import for better code splitting
+const AnimatedBackground = dynamic(() => import('../../components/AnimatedBackground'), {
+  ssr: false,
+  loading: () => null
+});
 
 const pageTransition = {
   initial: { opacity: 0, y: 10 },
@@ -13,19 +21,19 @@ const pageTransition = {
 // Tech icon mapping
 const getTechIcon = (tech: string) => {
   const iconMap: { [key: string]: string } = {
-    'Next.js': 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nextjs/nextjs-original.svg',
-    'React': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg',
-    'TypeScript': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/typescript/typescript-original.svg',
-    'JavaScript': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg',
-    'Supabase': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/supabase/supabase-original.svg',
-    'PostgreSQL': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg',
-    'Python': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg',
-    'Flask': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/flask/flask-original.svg',
-    'Tailwind CSS': 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/tailwindcss/tailwindcss-original.svg',
-    'shadcn/ui': 'https://ui.shadcn.com/favicon.ico',
-    'VS Code': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vscode/vscode-original.svg',
-    'GitHub': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg',
-    'Git': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/git/git-original.svg'
+    'Next.js': '/icons/nextjs.svg',
+    'React': '/icons/react.svg',
+    'TypeScript': '/icons/typescript.svg',
+    'JavaScript': '/icons/javascript.svg',
+    'Supabase': '/icons/supabase.svg',
+    'PostgreSQL': '/icons/postgresql.svg',
+    'Python': '/icons/python.svg',
+    'Flask': '/icons/flask.svg',
+    'Tailwind CSS': '/icons/tailwindcss.svg',
+    'shadcn/ui': 'https://ui.shadcn.com/favicon.ico', // Keep this as CDN since it's a special case
+    'VS Code': '/icons/vscode.svg',
+    'GitHub': '/icons/github.svg',
+    'Git': '/icons/git.svg'
   };
   return iconMap[tech] || null;
 };
@@ -36,10 +44,17 @@ const TechBadge = ({ tech }: { tech: string }) => {
   return (
     <span className="flex items-center gap-1.5 px-3 py-1 bg-white/10 text-white rounded-full text-xs font-medium border border-white/20">
       {icon && (
-        <img 
+        <Image 
           src={icon} 
           alt={tech} 
-          className={`w-3 h-3 ${tech === 'Next.js' || tech === 'GitHub' ? 'filter invert' : ''}`}
+          width={12}
+          height={12}
+          className={`${tech === 'Next.js' || tech === 'GitHub' ? 'filter invert' : ''}`}
+          loading="lazy"
+          style={{
+            transform: 'translateZ(0)', // GPU acceleration
+            backfaceVisibility: 'hidden'
+          }}
         />
       )}
       {tech}

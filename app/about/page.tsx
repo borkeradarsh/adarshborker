@@ -2,7 +2,14 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import AnimatedBackground from '@/components/AnimatedBackground';
+import Image from 'next/image';
+import dynamic from 'next/dynamic';
+
+// Dynamic import for background
+const AnimatedBackground = dynamic(() => import('../../components/AnimatedBackground'), {
+  ssr: false,
+  loading: () => <div className="fixed inset-0 -z-10 bg-slate-900" />
+});
 
 const pageTransition = {
   initial: { opacity: 0, y: 20 },
@@ -21,10 +28,17 @@ const TechIcon = ({ src, alt, filter }: { src: string; alt: string; filter?: str
     whileTap={{ scale: 0.95 }}
   >
     <div className="w-16 h-16 p-3 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all duration-300">
-      <img 
+      <Image 
         src={src} 
         alt={alt} 
-        className={`w-full h-full object-contain ${filter ? 'filter invert' : ''}`}
+        width={40}
+        height={40}
+        className={`object-contain ${filter ? 'filter invert' : ''}`}
+        loading="lazy"
+        style={{
+          transform: 'translateZ(0)', // Force GPU acceleration for images
+          backfaceVisibility: 'hidden'
+        }}
       />
     </div>
     {/* Tooltip */}
@@ -70,12 +84,19 @@ export default function About() {
           <div className="grid md:grid-cols-2 gap-12 items-center mb-16">
             <div>
               <div className="w-80 h-80 mx-auto relative">
-                <img
+                <Image
                   src="/profile-picture.jpg"
-                  alt="Adarsh Borker"
+                  alt="Adarsh Borker - Full Stack Developer"
+                  width={320}
+                  height={320}
+                  quality={70} // Optimize file size while maintaining quality
+                  priority={true} // Critical image - load immediately
+                  sizes="(max-width: 768px) 280px, 320px" // Responsive sizing
                   className="w-full h-full object-cover rounded-full border-4 border-gradient-to-br from-blue-500/50 to-purple-600/50 shadow-2xl"
+                  placeholder="blur"
+                  blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
                 />
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-6xl font-bold text-white opacity-0 transition-opacity duration-300 [&:has(~img[src=''])]:opacity-100">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-6xl font-bold text-white opacity-0 transition-opacity duration-300">
                   A
                 </div>
               </div>

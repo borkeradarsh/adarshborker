@@ -1,16 +1,31 @@
 ﻿'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 
-const AnimatedBackground = () => {
+const AnimatedBackground = memo(() => {
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [isInteracting, setIsInteracting] = useState(false);
   const shouldReduceMotion = useReducedMotion();
+
+  // Optimized interaction handlers with useCallback - must be at top level
+  const handleStart = useCallback(() => {
+    setIsInteracting(true);
+  }, []);
+  
+  const handleEnd = useCallback(() => {
+    const timeout = setTimeout(() => {
+      setIsInteracting(false);
+    }, 150); // Resume animations 150ms after interaction ends
+    return () => clearTimeout(timeout);
+  }, []);
+
+  // Interaction state tracking for performance optimization
 
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 1024); // Include md and smaller devices
+      setIsMobile(window.innerWidth < 768);
     };
     
     checkMobile();
@@ -19,25 +34,53 @@ const AnimatedBackground = () => {
     // Initialize time on client side only to avoid SSR/hydration mismatch
     setCurrentTime(new Date());
 
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 60000); // Update every minute
+    // Use requestAnimationFrame for better performance instead of setInterval
+    let animationId: number;
+    let lastUpdate = Date.now();
+    
+    const updateTime = () => {
+      const now = Date.now();
+      // Only update time every minute (60000ms) for performance
+      if (now - lastUpdate >= 60000) {
+        setCurrentTime(new Date());
+        lastUpdate = now;
+      }
+      
+      if (!shouldReduceMotion && !isInteracting) {
+        animationId = requestAnimationFrame(updateTime);
+      }
+    };
+    
+    if (!shouldReduceMotion && !isInteracting) {
+      animationId = requestAnimationFrame(updateTime);
+    }
+
+    // Listen for various interaction events with passive listeners for performance
+    const events = ['pointerdown', 'touchstart', 'mousedown', 'keydown'] as const;
+    const endEvents = ['pointerup', 'touchend', 'mouseup', 'keyup'] as const;
+    
+    events.forEach(event => document.addEventListener(event, handleStart, { passive: true }));
+    endEvents.forEach(event => document.addEventListener(event, handleEnd, { passive: true }));
 
     return () => {
-      clearInterval(timer);
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
       window.removeEventListener('resize', checkMobile);
+      events.forEach(event => document.removeEventListener(event, handleStart));
+      endEvents.forEach(event => document.removeEventListener(event, handleEnd));
     };
-  }, []);
+  }, [handleStart, handleEnd]);
 
-  // Calculate sun position based on time
-  const getSunPosition = () => {
+  // Calculate sun position based on time - optimized with useCallback
+  const getSunPosition = useCallback(() => {
     if (!currentTime) {
       return { x: 50, y: 15, isVisible: true, angle: 90 };
     }
     
-    const hours = currentTime.getHours();
-    const minutes = currentTime.getMinutes();
-    const totalMinutes = hours * 60 + minutes;
+    const hours = Math.max(0, Math.min(23, currentTime.getHours()));
+    const minutes = Math.max(0, Math.min(59, currentTime.getMinutes()));
+    const totalMinutes = Math.max(0, hours * 60 + minutes);
     
     // Map 24 hours to 360 degrees (sun arc across sky)
     // 6 AM = sunrise (left horizon), 12 PM = noon (overhead), 6 PM = sunset (right horizon)
@@ -48,24 +91,40 @@ const AnimatedBackground = () => {
     
     if (totalMinutes >= 360 && totalMinutes <= 1080) { // 6 AM to 6 PM
       // Daytime - sun moves from left to right across sky
-      sunAngle = ((totalMinutes - 360) / 720) * 180; // 0 to 180 degrees
+      sunAngle = Math.max(0, Math.min(180, ((totalMinutes - 360) / 720) * 180)); // 0 to 180 degrees
       isVisible = true;
     } else {
       // Nighttime - sun below horizon
       isVisible = false;
-      sunAngle = totalMinutes < 360 ? 180 + ((totalMinutes + 720) / 720) * 180 : 180 + ((totalMinutes - 1080) / 720) * 180;
+      const nightAngle = totalMinutes < 360 ? 
+        180 + ((totalMinutes + 720) / 720) * 180 : 
+        180 + ((totalMinutes - 1080) / 720) * 180;
+      sunAngle = Math.max(0, Math.min(360, nightAngle));
     }
     
-    const x = 50 + Math.cos((sunAngle - 90) * Math.PI / 180) * 45; // Horizontal position (5% to 95%)
-    const y = 50 - Math.sin((sunAngle - 90) * Math.PI / 180) * 35; // Vertical position (15% to 85%)
+    const x = Math.max(5, Math.min(95, 50 + Math.cos((sunAngle - 90) * Math.PI / 180) * 45)); // Horizontal position (5% to 95%)
+    const y = Math.max(15, Math.min(85, 50 - Math.sin((sunAngle - 90) * Math.PI / 180) * 35)); // Vertical position (15% to 85%)
     
-    return { x, y, isVisible, angle: sunAngle };
-  };
+    return { x: Math.round(x), y: Math.round(y), isVisible, angle: Math.round(sunAngle) };
+  }, [currentTime]);
 
   const sunPosition = getSunPosition();
   
+
+  
   return (
-    <div className="fixed inset-0 overflow-hidden -z-10" style={{ willChange: 'transform', transform: 'translateZ(0)' }}>
+    <div 
+      className="fixed inset-0 overflow-hidden -z-10" 
+      style={{ 
+        transform: 'translate3d(0, 0, 0)', // Force GPU layer
+        contain: 'layout style paint', // Maximum containment for performance
+        contentVisibility: 'auto', // Modern performance hint for large content
+        willChange: isInteracting ? 'auto' : 'transform, opacity', // Smart will-change management
+        perspective: '1000px', // Enable 3D rendering context
+        backfaceVisibility: 'hidden', // GPU optimization
+        isolation: 'isolate' // Create new stacking context for better compositing
+      }}
+    >
       {/* Realistic deep space background - true cosmic black */}
       <div 
         className="absolute inset-0"
@@ -78,158 +137,54 @@ const AnimatedBackground = () => {
         }}
       />
 
-      {/* Smooth Nebula Clouds - No Flickering */}
+      {/* Nebula Clouds - Fully static during interactions */}
       <motion.div
         className="absolute inset-0"
         style={{
           background: `
-            radial-gradient(ellipse 900px 600px at 25% 35%, rgba(60, 30, 15, 0.2) 0%, rgba(40, 20, 10, 0.12) 40%, rgba(25, 12, 6, 0.06) 70%, transparent 85%),
-            radial-gradient(ellipse 700px 500px at 75% 65%, rgba(40, 20, 60, 0.18) 0%, rgba(25, 12, 35, 0.10) 45%, rgba(15, 8, 20, 0.05) 75%, transparent 90%),
-            radial-gradient(ellipse 600px 400px at 60% 20%, rgba(20, 40, 60, 0.15) 0%, rgba(12, 25, 35, 0.08) 50%, rgba(8, 15, 20, 0.04) 80%, transparent 95%),
-            radial-gradient(ellipse 500px 350px at 15% 80%, rgba(50, 20, 35, 0.16) 0%, rgba(30, 12, 20, 0.09) 55%, rgba(18, 8, 12, 0.04) 85%, transparent 95%)
+            radial-gradient(ellipse 900px 600px at 25% 35%, rgba(60, 30, 15, 0.15) 0%, rgba(40, 20, 10, 0.08) 40%, rgba(25, 12, 6, 0.04) 70%, transparent 85%),
+            radial-gradient(ellipse 700px 500px at 75% 65%, rgba(40, 20, 60, 0.12) 0%, rgba(25, 12, 35, 0.06) 45%, rgba(15, 8, 20, 0.03) 75%, transparent 90%),
+            radial-gradient(ellipse 600px 400px at 60% 20%, rgba(20, 40, 60, 0.10) 0%, rgba(12, 25, 35, 0.05) 50%, rgba(8, 15, 20, 0.02) 80%, transparent 95%)
           `,
-          filter: 'blur(80px)',
-          opacity: 0.7
+          filter: 'blur(60px)',
+          opacity: isInteracting ? 0.5 : 0.7,
+          willChange: 'auto', // Remove willChange when not animating
+          transform: 'translateZ(0)', // Force GPU layer for static rendering
+          backfaceVisibility: 'hidden'
         }}
-        animate={{
-          scale: [1, 1.02, 0.99, 1.01, 1],
-          rotate: [0, 0.2, -0.1, 0.3, 0]
+        animate={shouldReduceMotion || isInteracting ? {} : {
+          scale: [1, 1.002, 1], // Ultra-minimal animation
+          opacity: [0.7, 0.75, 0.7]
         }}
-        transition={{
-          duration: 120,
+        transition={shouldReduceMotion || isInteracting ? {} : {
+          duration: 300, // Much slower
           repeat: Infinity,
           ease: "easeInOut"
         }}
       />
       
-      {/* Responsive Space Grid - CSS Grid for true responsiveness */}
+      {/* Grid lines removed - keeping all other cosmic elements */}
       <div className="absolute inset-0 overflow-hidden">
-        
-        {isMobile ? (
-          // Mobile: No gridlines for clean mobile experience
-          null
-        ) : (
-          // Desktop: Animated grid with original complexity
-          <motion.div 
-            className="absolute inset-0"
-            animate={{
-              opacity: [0.15, 0.25, 0.15]
-            }}
-            transition={{
-              duration: 8,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-          >
-            {/* Vertical Lines */}
-            {Array.from({ length: 30 }).map((_, i) => (
-              <motion.div
-                key={`v-${i}`}
-                className="absolute w-px h-full"
-                style={{
-                  left: `${(i + 1) * 3.33}%`,
-                  background: `linear-gradient(180deg, 
-                    transparent 0%, 
-                    rgba(180, 200, 255, 0.3) 20%, 
-                    rgba(200, 220, 255, 0.6) 50%, 
-                    rgba(180, 200, 255, 0.3) 80%, 
-                    transparent 100%
-                  )`,
-                  filter: 'blur(0.5px)'
-                }}
-                animate={shouldReduceMotion ? {} : {
-                  opacity: [0.1, 0.2, 0.1]
-                }}
-                transition={shouldReduceMotion ? {} : {
-                  duration: 4,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: i * 0.1
-                }}
-              />
-            ))}
-            
-            {/* Horizontal Lines */}
-            {Array.from({ length: 15 }).map((_, i) => (
-              <motion.div
-                key={`h-${i}`}
-                className="absolute h-px w-full"
-                style={{
-                  top: `${(i + 1) * 6.67}%`,
-                  background: `linear-gradient(90deg, 
-                    transparent 0%, 
-                    rgba(180, 200, 255, 0.2) 20%, 
-                    rgba(200, 220, 255, 0.5) 50%, 
-                    rgba(180, 200, 255, 0.2) 80%, 
-                    transparent 100%
-                  )`,
-                  filter: 'blur(0.5px)'
-                }}
-                animate={shouldReduceMotion ? {} : {
-                  opacity: [0.15, 0.7, 0.15]
-                }}
-                transition={shouldReduceMotion ? {} : {
-                  duration: 5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: i * 0.15
-                }}
-              />
-            ))}
-          </motion.div>
+        {/* Minimal Floating Elements - Interaction aware */}
+        {!isMobile && !isInteracting && (
+          <>
+            {/* Only show during non-interaction periods */}
+            <motion.div
+              className="absolute left-1/4 top-1/4 w-16 h-16 border border-blue-300/20 rounded-full"
+              animate={shouldReduceMotion ? {} : {
+                rotate: [0, 360] // Only rotate, no scale changes
+              }}
+              transition={shouldReduceMotion ? {} : {
+                rotate: { duration: 60, repeat: Infinity, ease: "linear" } // Much slower
+              }}
+              style={{ 
+                contain: 'strict',
+                willChange: 'transform',
+                backfaceVisibility: 'hidden'
+              }}
+            />
+          </>
         )}
-
-
-
-        {/* Floating Geometric Elements */}
-        <motion.div
-          className="absolute left-1/4 top-1/4 w-16 h-16 border border-blue-300/20 rounded-full"
-          animate={{
-            rotate: [0, 360],
-            scale: [1, 1.1, 1],
-            x: [0, 20, -10, 15, 0],
-            y: [0, -15, 25, -5, 0]
-          }}
-          transition={{
-            rotate: { duration: 30, repeat: Infinity, ease: "linear" },
-            scale: { duration: 6, repeat: Infinity, ease: "easeInOut" },
-            x: { duration: 20, repeat: Infinity, ease: "easeInOut" },
-            y: { duration: 25, repeat: Infinity, ease: "easeInOut" }
-          }}
-        />
-
-        <motion.div
-          className="absolute right-1/3 top-2/3 w-12 h-12 border border-purple-300/20"
-          style={{ clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' }}
-          animate={{
-            rotate: [0, -360],
-            scale: [1, 0.8, 1.2, 1],
-            x: [0, -25, 10, -15, 0],
-            y: [0, 20, -30, 5, 0]
-          }}
-          transition={{
-            rotate: { duration: 25, repeat: Infinity, ease: "linear" },
-            scale: { duration: 8, repeat: Infinity, ease: "easeInOut" },
-            x: { duration: 18, repeat: Infinity, ease: "easeInOut" },
-            y: { duration: 22, repeat: Infinity, ease: "easeInOut" }
-          }}
-        />
-
-        <motion.div
-          className="absolute right-1/4 top-1/6 w-8 h-8 border border-cyan-300/25"
-          animate={{
-            rotate: [0, 180, 360],
-            scale: [1, 1.3, 0.9, 1],
-            x: [0, 15, -20, 12, 0],
-            y: [0, -12, 18, -8, 0]
-          }}
-          transition={{
-            rotate: { duration: 20, repeat: Infinity, ease: "linear" },
-            scale: { duration: 5, repeat: Infinity, ease: "easeInOut" },
-            x: { duration: 16, repeat: Infinity, ease: "easeInOut" },
-            y: { duration: 19, repeat: Infinity, ease: "easeInOut" }
-          }}
-        />
 
 
 
@@ -296,37 +251,41 @@ const AnimatedBackground = () => {
             }}
           />
           
-          {/* Solar flares - dynamic activity */}
+          {/* Solar flares - static during interactions */}
           <motion.div
             className="absolute inset-0"
-            animate={{
+            animate={isInteracting ? {} : {
               rotate: [0, 360]
             }}
-            transition={{
-              duration: 120,
+            transition={isInteracting ? {} : {
+              duration: 200,
               repeat: Infinity,
               ease: "linear"
             }}
+            style={{
+              willChange: isInteracting ? 'auto' : 'transform'
+            }}
           >
-            {Array.from({ length: 8 }).map((_, i) => (
+            {[0, 1, 2, 3, 4, 5].map((i) => (
               <motion.div
                 key={i}
-                className="absolute w-1 h-6 bg-gradient-to-t from-yellow-300 to-transparent rounded-full"
+                className="absolute w-1 h-4 bg-gradient-to-t from-yellow-300 to-transparent rounded-full"
                 style={{
                   left: '50%',
-                  top: '-10px',
-                  transformOrigin: '50% 42px',
-                  transform: `rotate(${i * 45}deg) translateX(-50%)`,
+                  top: '-8px',
+                  transformOrigin: '50% 36px',
+                  transform: `rotate(${Math.round(i * 60)}deg) translateX(-50%)`,
+                  backfaceVisibility: 'hidden',
                   opacity: 0.6
                 }}
-                animate={{
-                  scaleY: [1, 1.5, 0.8, 1.2, 1],
-                  opacity: [0.4, 0.8, 0.3, 0.7, 0.4]
+                animate={isInteracting ? {} : {
+                  scaleY: [1, 1.3, 1],
+                  opacity: [0.4, 0.7, 0.4]
                 }}
-                transition={{
-                  duration: 4 + Math.random() * 6,
+                transition={isInteracting ? {} : {
+                  duration: 8,
                   repeat: Infinity,
-                  delay: i * 0.5,
+                  delay: i * 1.5,
                   ease: "easeInOut"
                 }}
               />
@@ -524,26 +483,26 @@ const AnimatedBackground = () => {
         </div>
       </motion.div>
 
-      {/* Orion Nebula - Classic deep-sky astronomical object for dark academia theme */}
+      {/* Orion Nebula - Interaction-aware performance */}
       <motion.div
         className="absolute"
         style={{
           left: '18%',
           top: '55%',
           width: '220px',
-          height: '180px'
+          height: '180px',
+          backfaceVisibility: 'hidden',
+          willChange: isInteracting ? 'auto' : 'transform'
         }}
-        animate={{
-          scale: [0.95, 1.08, 0.92, 1.05, 0.95],
-          x: [0, 8, -5, 12, -3, 0],
-          y: [0, -12, 6, -8, 15, 0],
-          rotate: [0, 2, -1, 3, 0]
+        animate={isInteracting ? {} : {
+          scale: [0.98, 1.02, 0.98],
+          x: [0, 4, 0],
+          y: [0, -6, 0]
         }}
-        transition={{
-          scale: { duration: 60, repeat: Infinity, ease: "easeInOut" },
-          x: { duration: 180, repeat: Infinity, ease: "easeInOut" },
-          y: { duration: 220, repeat: Infinity, ease: "easeInOut" },
-          rotate: { duration: 300, repeat: Infinity, ease: "easeInOut" }
+        transition={isInteracting ? {} : {
+          scale: { duration: 120, repeat: Infinity, ease: "easeInOut" },
+          x: { duration: 300, repeat: Infinity, ease: "easeInOut" },
+          y: { duration: 400, repeat: Infinity, ease: "easeInOut" }
         }}
       >
         {/* Main nebula body - warm emission nebula colors */}
@@ -578,11 +537,11 @@ const AnimatedBackground = () => {
             `,
             filter: `blur(8px) contrast(${sunPosition.isVisible ? '1.2' : '0.9'}) brightness(${sunPosition.isVisible ? '1.1' : '0.7'})`
           }}
-          animate={{
-            opacity: sunPosition.isVisible ? [0.8, 1.0, 0.7, 0.9, 0.8] : [0.5, 0.7, 0.4, 0.6, 0.5]
+          animate={isInteracting ? {} : {
+            opacity: sunPosition.isVisible ? [0.8, 0.9, 0.8] : [0.5, 0.6, 0.5]
           }}
-          transition={{
-            duration: 45,
+          transition={isInteracting ? {} : {
+            duration: 90,
             repeat: Infinity,
             ease: "easeInOut"
           }}
@@ -612,15 +571,15 @@ const AnimatedBackground = () => {
                   `0 0 8px rgba(255, 240, 220, 0.6), 0 0 16px rgba(255, 200, 150, 0.3)` :
                   `0 0 4px rgba(180, 160, 140, 0.4), 0 0 8px rgba(150, 120, 100, 0.2)`
               }}
-              animate={{
-                scale: [0.8, 1.2, 0.9, 1.1, 0.8],
-                opacity: sunPosition.isVisible ? [0.7, 1.0, 0.6, 0.9, 0.7] : [0.4, 0.7, 0.3, 0.6, 0.4]
+              animate={isInteracting ? {} : {
+                scale: [0.9, 1.1, 0.9],
+                opacity: sunPosition.isVisible ? [0.7, 0.9, 0.7] : [0.4, 0.6, 0.4]
               }}
-              transition={{
-                duration: 8 + index * 2,
+              transition={isInteracting ? {} : {
+                duration: 16 + index * 4,
                 repeat: Infinity,
                 ease: "easeInOut",
-                delay: index * 0.5
+                delay: index * 1
               }}
             />
           ))}
@@ -648,12 +607,12 @@ const AnimatedBackground = () => {
             `,
             filter: 'blur(12px)'
           }}
-          animate={{
-            opacity: sunPosition.isVisible ? [0.6, 0.9, 0.5, 0.8, 0.6] : [0.3, 0.5, 0.2, 0.4, 0.3],
-            scale: [1, 1.05, 0.98, 1.03, 1]
+          animate={isInteracting ? {} : {
+            opacity: sunPosition.isVisible ? [0.6, 0.8, 0.6] : [0.3, 0.4, 0.3],
+            scale: [1, 1.02, 1]
           }}
-          transition={{
-            duration: 80,
+          transition={isInteracting ? {} : {
+            duration: 160,
             repeat: Infinity,
             ease: "easeInOut"
           }}
@@ -795,6 +754,8 @@ const AnimatedBackground = () => {
       />
     </div>
   );
-};
+});
+
+AnimatedBackground.displayName = 'AnimatedBackground';
 
 export default AnimatedBackground;

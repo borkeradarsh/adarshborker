@@ -1,53 +1,43 @@
 # Adarsh's Portfolio
 
-A modern, responsive portfolio website built with React, TypeScript, Tailwind CSS, and Framer Motion.
+A modern, responsive portfolio website built with Next.js, TypeScript, Tailwind CSS, and Framer Motion featuring cosmic animations and optimized performance.
 
 ## ✨ Features
 
-- **Modern Design**: Clean, professional design with smooth animations
-- **Responsive**: Fully responsive design that works on all devices
-- **Fast Performance**: Built with Vite for lightning-fast development and optimized builds
+- **Cosmic Animated Background**: Real-time sun/moon positioning with beautiful space animations
+- **Performance Optimized**: 141kB First Load JS with dynamic imports and code splitting
+- **Responsive Design**: Fully responsive across all devices with mobile-first approach
 - **Type Safety**: Full TypeScript support for better development experience
-- **Animations**: Beautiful animations powered by Framer Motion
-- **SEO Optimized**: Proper meta tags and semantic HTML for better search engine visibility
-- **Accessible**: WCAG compliant with proper ARIA labels and keyboard navigation
+- **Smooth Animations**: Framer Motion animations with interaction-aware performance optimization
+- **Modern Stack**: Next.js 15, React 18, Tailwind CSS, and production-ready configuration
 
 ## 🚀 Tech Stack
 
+- **Framework**: Next.js 15.1.0 with App Router
 - **Frontend**: React 18 + TypeScript
 - **Styling**: Tailwind CSS
-- **Animations**: Framer Motion
-- **Routing**: React Router v6
-- **Build Tool**: Vite
-- **Code Quality**: ESLint + Prettier
-- **Deployment**: Ready for Vercel, Netlify, or any static hosting
+- **Animations**: Framer Motion with GPU acceleration
+- **Performance**: Bundle analyzer, dynamic imports, optimized caching
+- **Analytics**: Vercel Analytics integration
 
-## 📁 Project Structure
+## 🏗️ Project Structure
 
 ```
-src/
-├── components/     # Reusable UI components
-│   ├── Button.tsx
-│   ├── Card.tsx
-│   ├── Footer.tsx
-│   ├── Hero.tsx
-│   └── Navbar.tsx
-├── pages/          # Page components
-│   ├── About.tsx
-│   ├── Contact.tsx
-│   ├── Home.tsx
-│   └── Projects.tsx
-├── hooks/          # Custom React hooks
-│   ├── useForm.ts
-│   └── useScrollAnimation.ts
-├── utils/          # Utility functions and constants
-│   ├── constants.ts
-│   ├── motionVariants.ts
-│   └── types.ts
-├── styles/         # Global styles
-│   └── globals.css
-└── assets/         # Static assets
-    ├── images/
+app/
+├── page.tsx          # Homepage with hero section
+├── about/            # About page with profile details
+├── projects/         # Projects showcase
+├── travel/           # Travel experiences
+├── contact/          # Contact form and links
+├── layout.tsx        # Root layout with fonts and analytics
+└── api/              # API routes
+
+components/
+├── AnimatedBackground.tsx  # Cosmic background with sun positioning
+├── CosmicLoader.tsx       # Loading animation
+├── Hero.tsx              # Hero section
+├── Button.tsx            # Reusable button component
+└── ...                   # Other UI components
     └── svgs/
 ```
 
@@ -58,17 +48,66 @@ The project includes three predefined color palettes in `src/utils/constants.ts`
 ### Modern (Default)
 - Primary: `#3B82F6` (Blue)
 - Secondary: `#8B5CF6` (Violet)  
-- Accent: `#06B6D4` (Cyan)
+```
 
-### Warm
-- Primary: `#F59E0B` (Amber)
-- Secondary: `#EC4899` (Pink)
-- Accent: `#EF4444` (Red)
+## 🚀 Quick Start
 
-### Nature
-- Primary: `#10B981` (Emerald)
-- Secondary: `#14B8A6` (Teal)
-- Accent: `#06B6D4` (Cyan)
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Start production server
+npm start
+
+# Analyze bundle size
+npm run analyze
+```
+
+## 📈 Performance
+
+- **First Load JS**: 141kB (optimized)
+- **Bundle Splitting**: Dynamic imports for heavy components
+- **Caching**: 1-year cache for static assets
+- **Image Optimization**: WebP/AVIF formats with quality optimization
+- **Animation Performance**: RequestAnimationFrame with interaction-aware pausing
+
+## 🌐 Deployment
+
+This project is optimized for deployment on:
+- **Vercel** (recommended)
+- **Netlify**
+- **Any static hosting platform**
+
+### Environment Variables (Optional)
+```bash
+REVALIDATION_SECRET=your-secret-key  # For ISR revalidation endpoint
+ANALYZE=true                         # Enable bundle analyzer
+```
+
+## 📱 Browser Support
+
+- Chrome (latest)
+- Firefox (latest)  
+- Safari (latest)
+- Edge (latest)
+
+## 🎨 Design Features
+
+- Cosmic theme with animated planets, nebula, and geometric elements
+- Real-time sun position calculation based on time of day
+- Smooth page transitions and hover effects
+- Professional gradient typography
+- Interactive elements with performance optimization
+
+---
+
+Built with ❤️ by [Adarsh Borker](https://github.com/borkeradarsh)
 
 ## 🛠️ Setup & Installation
 

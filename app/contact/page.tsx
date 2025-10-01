@@ -3,8 +3,14 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Linkedin, Github } from 'lucide-react';
-import AnimatedBackground from '@/components/AnimatedBackground';
-import Button from '@/components/Button';
+import dynamic from 'next/dynamic';
+import Button from '../../components/Button';
+
+// Dynamic import for better code splitting
+const AnimatedBackground = dynamic(() => import('../../components/AnimatedBackground'), {
+  ssr: false,
+  loading: () => null
+});
 
 const pageTransition = {
   initial: { opacity: 0, y: 20 },

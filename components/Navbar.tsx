@@ -20,30 +20,41 @@ const Navbar: React.FC<NavbarProps> = ({ className = '' }) => {
     closed: {
       opacity: 0,
       height: 0,
+      y: -20,
       transition: {
-        duration: 0.3,
-        ease: "easeInOut"
+        duration: 0.4,
+        ease: [0.4, 0.0, 0.2, 1], // Custom cubic-bezier for smooth closing
+        opacity: { duration: 0.2 },
+        height: { duration: 0.4, delay: 0.1 }
       }
     },
     open: {
       opacity: 1,
       height: "auto",
+      y: 0,
       transition: {
-        duration: 0.3,
-        ease: "easeInOut"
+        duration: 0.5,
+        ease: [0.0, 0.0, 0.2, 1], // Custom cubic-bezier for smooth opening
+        height: { duration: 0.4 },
+        opacity: { duration: 0.3, delay: 0.1 }
       }
     }
   };
 
   const itemVariants = {
-    closed: { opacity: 0, x: -20 },
+    closed: { 
+      opacity: 0, 
+      x: -30,
+      y: -10
+    },
     open: (i: number) => ({
       opacity: 1,
       x: 0,
+      y: 0,
       transition: {
-        delay: i * 0.1,
-        duration: 0.3,
-        ease: "easeOut"
+        delay: i * 0.08 + 0.2, // Slightly faster stagger with initial delay
+        duration: 0.4,
+        ease: [0.0, 0.0, 0.2, 1] // Smooth easing
       }
     })
   };
@@ -109,12 +120,21 @@ const Navbar: React.FC<NavbarProps> = ({ className = '' }) => {
           <motion.button
             onClick={toggleMenu}
             className="md:hidden text-white/80 hover:text-white transition-colors p-2"
-            whileTap={{ scale: 0.95 }}
+            whileTap={{ scale: 0.9 }}
+            whileHover={{ scale: 1.05 }}
             aria-label="Toggle navigation menu"
           >
             <motion.div
-              animate={{ rotate: isOpen ? 180 : 0 }}
-              transition={{ duration: 0.3 }}
+              animate={{ 
+                rotate: isOpen ? 90 : 0,
+                scale: isOpen ? 1.1 : 1
+              }}
+              transition={{ 
+                duration: 0.4,
+                ease: [0.4, 0.0, 0.2, 1],
+                type: "spring",
+                damping: 20
+              }}
             >
               {isOpen ? <X className="w-6 h-6" /> : <Orbit className="w-6 h-6" />}
             </motion.div>
@@ -123,14 +143,18 @@ const Navbar: React.FC<NavbarProps> = ({ className = '' }) => {
       </div>
 
       {/* Mobile Menu */}
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {isOpen && (
           <motion.div
             variants={menuVariants}
             initial="closed"
             animate="open"
             exit="closed"
-            className="md:hidden bg-black/30 backdrop-blur-md border-b border-white/10 overflow-hidden"
+            className="md:hidden bg-black/35 backdrop-blur-lg border-b border-white/10 overflow-hidden shadow-2xl"
+            style={{
+              backdropFilter: "blur(20px) saturate(180%)",
+              WebkitBackdropFilter: "blur(20px) saturate(180%)"
+            }}
           >
             <div className="container mx-auto px-4 py-6 space-y-6">
               {/* Navigation Links */}

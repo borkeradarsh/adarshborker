@@ -1,59 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { memo, useCallback } from 'react';
 import Button from './Button';
 
-const Hero = () => {
-  const [displayText, setDisplayText] = useState('');
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [hasStarted, setHasStarted] = useState(false);
+const Hero = memo(() => {
+  // Simplified - remove complex typewriter animation to fix INP
   const fullText = 'Adarsh Borker';
 
-  useEffect(() => {
-    const startAnimation = () => {
-      if (isAnimating) return; // Prevent overlapping animations
-      
-      setIsAnimating(true);
-      setDisplayText('');
-      
-      // Type out each character smoothly
-      for (let i = 0; i <= fullText.length; i++) {
-        setTimeout(() => {
-          setDisplayText(fullText.slice(0, i));
-          if (i === fullText.length) {
-            setIsAnimating(false);
-          }
-        }, i * 150); // Consistent timing
-      }
-    };
-
-    // Start first animation after component mounts
-    if (!hasStarted) {
-      setHasStarted(true);
-      const initialTimeout = setTimeout(() => {
-        startAnimation();
-      }, 800); // Delay to avoid conflict with page load
-      
-      return () => clearTimeout(initialTimeout);
-    }
-    
-    // Repeat animation every 5 seconds after first one
-    const interval = setInterval(startAnimation, 5000);
-    
-    return () => clearInterval(interval);
-  }, [hasStarted, isAnimating, fullText]);
-
-  const handleDownloadResume = () => {
+  const handleDownloadResume = useCallback(() => {
     const link = document.createElement("a");
     link.href = "/resume.pdf";
     link.download = "Adarsh_Resume.pdf";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };
+  }, []);
 
-  const handleViewGitHub = () => {
+  const handleViewGitHub = useCallback(() => {
     window.open("https://github.com/borkeradarsh", "_blank");
-  };
+  }, []);
 
   return (
     <section className="min-h-screen flex items-center justify-center relative z-10 pt-20">
@@ -62,23 +25,13 @@ const Hero = () => {
           <h1 className="text-6xl md:text-7xl font-bold mb-6">
             <span className="text-slate-300">Hello, I'm</span>
             <br />
-            <motion.span 
-              className="bg-gradient-to-r from-[#010139] via-[#4a0051] to-[#340166] bg-clip-text text-transparent inline-block"
-              style={{ 
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                color: '#60A5FA' // Fallback color
-              }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            >
-              {displayText || 'Adarsh Borker'}
-            </motion.span>
+            <span className="bg-gradient-to-r from-blue-400 via-purple-500 to-cyan-400 bg-clip-text text-transparent">
+              {fullText}
+            </span>
           </h1>
           
           <h2 className="text-2xl md:text-3xl text-slate-400 mb-8 font-light">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 font-medium">
+            <span className="text-blue-400 font-medium">
               Full-Stack Developer | React, Next.js, AI Integration | Travel
             </span>
           </h2>
@@ -107,6 +60,8 @@ const Hero = () => {
       </div>
     </section>
   );
-};
+});
+
+Hero.displayName = 'Hero';
 
 export default Hero;

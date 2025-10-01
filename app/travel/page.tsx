@@ -2,7 +2,13 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import AnimatedBackground from '@/components/AnimatedBackground';
+import Image from 'next/image';
+import dynamic from 'next/dynamic';
+
+const AnimatedBackground = dynamic(() => import('../../components/AnimatedBackground'), {
+  ssr: false,
+  loading: () => null
+});
 
 const pageTransition = {
   initial: { opacity: 0, y: 10 },
@@ -37,10 +43,14 @@ const TravelCard = ({
     {/* Image Section - Top Half */}
     {image && (
       <div className="relative h-80 overflow-hidden bg-slate-800/50 flex items-center justify-center">
-        <img
+        <Image
           src={image}
-          alt={`${location}, ${country}`}
-          className="w-full h-full object-cover"
+          alt={`${location}, ${country} - Travel destination`}
+          fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          className="object-cover"
+          placeholder="blur"
+          blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
         />
         <div className="absolute inset-0 bg-black/20"></div>
         
@@ -227,7 +237,7 @@ export default function Travel() {
                 experience different cultures, and create more unforgettable memories.
               </p>
               <p className="text-emerald-300 font-medium">
-                "The world is a book, and those who do not travel read only one page." - Saint Augustine
+                "The world is a book, and those who do not travel read only one page."
               </p>
             </div>
           </motion.section>
